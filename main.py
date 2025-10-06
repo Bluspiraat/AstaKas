@@ -19,23 +19,24 @@ CONVERT_FILE = True
 START_DATE = input("Enter start date (DD-MM-YYYY): ")
 END_DATE = input("Enter end date (DD-MM-YYYY): ")
 
+
 # --- Remove unnecessary lines from the E-Boekhouden export ---
-if CONVERT_FILE:
-    lines_to_delete = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10]
+lines_to_delete = [0, 1, 2, 3, 4, 5, 6, 7, 8, 10]
 
-    # Read all lines
-    with open(EBH, 'r') as f:
-        lines = f.readlines()
+# Read all lines
+with open(EBH, 'r') as f:
+    lines = f.readlines()
 
-    # Filter lines by keeping only those not in the list
-    filtered_lines = [line for i, line in enumerate(lines) if i not in lines_to_delete]
+# Filter lines by keeping only those not in the list
+filtered_lines = [line for i, line in enumerate(lines) if i not in lines_to_delete]
 
-    # Write the filtered lines back
-    with open(EBH, 'w') as f:
-        f.writelines(filtered_lines)
+# Write the filtered lines back
+EBH_temp = 'EBH_temp.txt'
+with open('EBH_temp.txt', 'w') as f:
+    f.writelines(filtered_lines)
 
 # --- Read the CSV files, clean them and convert them ---
-df_EBH = pd.read_csv(EBH, sep='\t')
+df_EBH = pd.read_csv(EBH_temp, sep='\t')
 df_EBH.drop(columns=['Kostenplaats'], inplace=True)
 df_EBH['Datum'] = pd.to_datetime(df_EBH['Datum'], dayfirst=True)
 
@@ -52,7 +53,7 @@ df_EBH['Passiva'] = df_EBH['Passiva'].apply(lambda x: -abs(x) if pd.notna(x) els
 df_EBH['Amount'] = df_EBH['Passiva'].fillna(df_EBH['Activa'])
 df_EBH.drop(columns=['Activa', 'Passiva', 'Nr', 'Omschrijving', 'Relatie', 'Factuur', 'Boekstuk'], inplace=True)
 
-df_BANK = pd.read_csv(BANK, sep='\t')
+df_BANK = pd.read_csv(BANK, sep=';')
 df_BANK['Date'] = pd.to_datetime(df_BANK['Date'], dayfirst=True)
 df_BANK['Amount'] = df_BANK['Amount'].str.replace('.', '', regex=False)
 df_BANK['Amount'] = df_BANK['Amount'].str.replace(',', '.', regex=False).astype(float)
